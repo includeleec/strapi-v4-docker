@@ -1,0 +1,81 @@
+---
+version: "2.0"
+
+services:
+  strapi:
+    image: leec121/strapi-v4-pg:1.1
+    env:
+      - DATABASE_CLIENT=postgres
+      - DATABASE_HOST=postgres
+      - DATABASE_NAME=strapi
+      - DATABASE_USERNAME=strapi
+      - DATABASE_PASSWORD=strapi
+      - DATABASE_PORT=5432
+      - JWT_SECRET=eZEonp78J7yi/isWUe9eiQ==
+      - NODE_ENV=production
+    expose:
+      - port: 1337
+        as: 80
+        to:
+          - global: true
+        accept:
+          - strapi.icp123.org
+          - dedrops.xyz
+    depends-on:
+      - postgres
+
+  postgres:
+    image: postgres:12.0-alpine
+    env:
+      - POSTGRES_USER=strapi
+      - POSTGRES_PASSWORD=strapi
+      - POSTGRES_DB=strapi
+    expose:
+      - port: 5432
+        to:
+          - service: strapi
+          - global: true
+
+
+
+profiles:
+  compute:
+    strapi-profile:
+      resources:
+        cpu:
+          units: 1
+        memory:
+          size: 1Gi
+        storage:
+          size: 2Gi
+    postgres-profile:
+      resources:
+        cpu:
+          units: 1
+        memory:
+          size: 1Gi
+        storage:
+          size: 2Gi
+
+
+  placement:
+    akash:
+      attributes:
+        host: akash
+      pricing:
+        strapi-profile:
+          denom: uakt
+          amount: 100
+        postgres-profile:
+          denom: uakt
+          amount: 100
+
+deployment:
+  strapi:
+    akash:
+      profile: strapi-profile
+      count: 1
+  postgres:
+    akash:
+      profile: postgres-profile
+      count: 1

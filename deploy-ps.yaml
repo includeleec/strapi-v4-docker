@@ -1,0 +1,93 @@
+---
+version: "2.0"
+
+services:
+  strapi:
+    image: leec121/strapi-v4-pg:v1
+    params:
+      storage:
+        data:
+          mount: /var/lib/strapi
+    env:
+      - DATABASE_CLIENT=postgres
+      - DATABASE_HOST=localhost
+      - DATABASE_NAME=strapi
+      - DATABASE_USERNAME=strapi
+      - DATABASE_PASSWORD=strapi
+      - DATABASE_PORT=5432
+      - JWT_SECRET=eZEonp78J7yi/isWUe9eiQ==
+      - NODE_ENV=development
+    expose:
+      - port: 1337
+        as: 80
+        to:
+          - global: true
+    depends-on:
+      - postgres
+
+  postgres:
+    image: postgres:12.0-alpine
+    params:
+      storage:
+        data:
+          mount: /var/lib/postgres
+    env:
+      - POSTGRES_USER=strapi
+      - POSTGRES_PASSWORD=strapi
+      - POSTGRES_DB=strapi
+    expose:
+      - port: 5432
+        to:
+          - service: strapi
+          - global: true
+
+
+
+profiles:
+  compute:
+    strapi-profile:
+      resources:
+        cpu:
+          units: 1
+        memory:
+          size: 1Gi
+        storage:
+          - size: 2Gi
+          - name: data
+            size: 4Gi
+            attributes:
+              persistent: true
+    postgres-profile:
+      resources:
+        cpu:
+          units: 1
+        memory:
+          size: 1Gi
+        storage:
+          - size: 2Gi
+          - name: data
+            size: 4Gi
+            attributes:
+              persistent: true
+
+  placement:
+    akash:
+      attributes:
+        host: akash
+      pricing:
+        strapi-profile:
+          denom: uakt
+          amount: 100
+        postgres-profile:
+          denom: uakt
+          amount: 100
+
+deployment:
+  strapi:
+    akash:
+      profile: strapi-profile
+      count: 1
+  postgres:
+    akash:
+      profile: postgres-profile
+      count: 1
